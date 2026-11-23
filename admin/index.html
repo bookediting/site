@@ -147,7 +147,7 @@ async function api(path, opts){
   opts = opts || {};
   const r = await fetch(API + path, {method: opts.method||'GET', headers: {Authorization: 'Bearer '+token, 'Content-Type':'application/json'},
     body: opts.body ? JSON.stringify(opts.body) : undefined});
-  if(r.status === 401){ token = null; throw new Error('החיבור לגוגל פג. לחץ "רענן" כדי להתחבר שוב.'); }
+  if(r.status === 401){ token = null; try{ sessionStorage.removeItem('codesAdminToken'); }catch(e){} throw new Error('החיבור לגוגל פג. לחץ "רענן" כדי להתחבר שוב.'); }
   if(!r.ok){ throw new Error('שגיאה מגוגל ('+r.status+'). נסה "רענן".'); }
   return r.json();
 }
@@ -244,11 +244,17 @@ async function copy(btn, value){
   setTimeout(()=>btn.textContent=orig, 2000);
 }
 
-function login(){ tokenClient.requestAccessToken({prompt: token ? '' : 'select_account'}); }
+function login(){ tokenClient.requestAccessToken({prompt: ''}); }
 
 function onToken(resp){
-  if(resp.error){ document.getElementById('gateStatus').textContent = 'הכניסה בוטלה או נכשלה.'; return; }
+  if(resp.error){ document.getElementById('gateStatus').textContent = 'הכניסה בוטלה או נכשלה. נסה שוב.'; return; }
   token = resp.access_token;
+  // שומרים את ההתחברות לשעה בלשונית הזו בלבד, כדי שרענון הדף לא יחייב כניסה מחדש
+  try{ sessionStorage.setItem('codesAdminToken', JSON.stringify({t: token, exp: Date.now() + (resp.expires_in||3600)*1000 - 60000})); }catch(e){}
+  showApp();
+}
+
+function showApp(){
   document.getElementById('gate').hidden = true;
   document.getElementById('app').hidden = false;
   load().catch(e=>setStatus(e.message.includes('403') ? 'לחשבון הזה אין גישה לגיליון הקודים.' : e.message, 'err'));
@@ -263,6 +269,11 @@ document.getElementById('btnReload').onclick = ()=> token ? load().catch(e=>{ se
 document.getElementById('btnSheet').onclick = ()=> window.open(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`, '_blank', 'noopener');
 document.getElementById('btnCopyLink').onclick = function(){ copy(this, LINKS[tab]); };
 document.getElementById('btnLogin').onclick = login;
+
+try{
+  const s = JSON.parse(sessionStorage.getItem('codesAdminToken')||'null');
+  if(s && s.exp > Date.now()){ token = s.t; showApp(); }
+}catch(e){}
 
 (function waitGis(){
   if(window.google && google.accounts && google.accounts.oauth2){
