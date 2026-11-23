@@ -6,7 +6,6 @@
 <meta name="robots" content="noindex,nofollow">
 <title>ניהול קודים — שלחן ערוך</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700&family=Heebo:wght@400;500;600;700&display=swap">
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root{
   --paper:#eef0ec; --paper-raised:#ffffff; --ink:#22261f; --ink-soft:#5b6157; --line:#d7d9cf;
@@ -244,20 +243,25 @@ async function copy(btn, value){
   setTimeout(()=>btn.textContent=orig, 2000);
 }
 
-function login(){ tokenClient.requestAccessToken({prompt: ''}); }
-
-function onToken(resp){
-  if(resp.error){ document.getElementById('gateStatus').textContent = 'הכניסה בוטלה או נכשלה. נסה שוב.'; return; }
-  token = resp.access_token;
-  // שומרים את ההתחברות לשעה בלשונית הזו בלבד, כדי שרענון הדף לא יחייב כניסה מחדש
-  try{ sessionStorage.setItem('codesAdminToken', JSON.stringify({t: token, exp: Date.now() + (resp.expires_in||3600)*1000 - 60000})); }catch(e){}
-  showApp();
+// כניסה אוטומטית: הדף עובר לגוגל וחוזר לבד. "silent" = בלי שום חלון (עובד כשכבר מחובר לגוגל ונתן הרשאה).
+// אם גוגל צריך בחירת חשבון או אישור, עוברים פעם אחת לכניסה רגילה.
+const REDIRECT = "https://app.bookediting.org/admin/";
+function login(mode){
+  mode = mode || 'silent';
+  const p = new URLSearchParams({client_id: CLIENT_ID, redirect_uri: REDIRECT, response_type: 'token', scope: SCOPE,
+    include_granted_scopes: 'true', state: mode});
+  if(mode === 'silent') p.set('prompt', 'none');
+  location.replace('https://accounts.google.com/o/oauth2/v2/auth?' + p.toString());
+}
+function saveToken(t, expiresIn){
+  token = t;
+  try{ sessionStorage.setItem('codesAdminToken', JSON.stringify({t, exp: Date.now() + (expiresIn||3600)*1000 - 60000})); }catch(e){}
 }
 
 function showApp(){
   document.getElementById('gate').hidden = true;
   document.getElementById('app').hidden = false;
-  load().catch(e=>setStatus(e.message.includes('403') ? 'לחשבון הזה אין גישה לגיליון הקודים.' : e.message, 'err'));
+  load().catch(e=> e.message.includes('403') ? setStatus('לחשבון הזה אין גישה לגיליון הקודים.', 'err') : onLoadError(e));
 }
 
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
@@ -266,21 +270,31 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
 });
 document.getElementById('btnCreate').onclick = createCode;
 document.getElementById('btnReload').onclick = ()=> token ? load().catch(e=>{ setStatus(e.message,'err'); if(!token) login(); }) : login();
+function onLoadError(e){ if(!token) login(); else setStatus(e.message,'err'); }
 document.getElementById('btnSheet').onclick = ()=> window.open(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`, '_blank', 'noopener');
 document.getElementById('btnCopyLink').onclick = function(){ copy(this, LINKS[tab]); };
-document.getElementById('btnLogin').onclick = login;
+document.getElementById('btnLogin').onclick = ()=>login('interactive');
 
-try{
-  const s = JSON.parse(sessionStorage.getItem('codesAdminToken')||'null');
-  if(s && s.exp > Date.now()){ token = s.t; showApp(); }
-}catch(e){}
-
-(function waitGis(){
-  if(window.google && google.accounts && google.accounts.oauth2){
-    tokenClient = google.accounts.oauth2.initTokenClient({client_id: CLIENT_ID, scope: SCOPE, callback: onToken});
+(function start(){
+  const h = new URLSearchParams(location.hash.slice(1));
+  if(h.get('access_token')){
+    saveToken(h.get('access_token'), +h.get('expires_in'));
+    history.replaceState(null, '', location.pathname);  // מנקה את הכתובת
+    return showApp();
+  }
+  if(h.get('error')){
+    history.replaceState(null, '', location.pathname);
+    if(h.get('state') === 'silent') return login('interactive');  // צריך בחירת חשבון או אישור: כניסה רגילה, פעם אחת
     document.getElementById('btnLogin').disabled = false;
-    document.getElementById('gateStatus').textContent = '';
-  } else setTimeout(waitGis, 200);
+    document.getElementById('gateStatus').textContent = 'הכניסה לא הושלמה. לחץ על הכפתור כדי לנסות שוב.';
+    return;
+  }
+  try{
+    const s = JSON.parse(sessionStorage.getItem('codesAdminToken')||'null');
+    if(s && s.exp > Date.now()){ token = s.t; return showApp(); }
+  }catch(e){}
+  document.getElementById('gateStatus').textContent = 'מתחבר לגוגל…';
+  login('silent');
 })();
 </script>
 </body>
