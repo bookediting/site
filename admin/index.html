@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>ניהול קודים — שלחן ערוך</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700&family=Heebo:wght@400;500;600;700&display=swap">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root{
+  --paper:#eef0ec; --paper-raised:#ffffff; --ink:#22261f; --ink-soft:#5b6157; --line:#d7d9cf;
+  --accent:#1f5c56; --accent-soft:#dcebe8; --accent-ink:#12403b;
+  --ok:#3f7a4e; --ok-soft:#e1efe3; --crit:#a4433a; --crit-soft:#f4dfdb; --muted-soft:#e7e6df;
+  --shadow: 0 1px 2px rgba(34,38,31,.06), 0 4px 14px rgba(34,38,31,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#1b1e19; --paper-raised:#242821; --ink:#e9ebe3; --ink-soft:#a7ac9d; --line:#3a3f34;
+    --accent:#5fb3a8; --accent-soft:#26433f; --accent-ink:#bfe9e1;
+    --ok:#7bc48d; --ok-soft:#22392a; --crit:#e2857b; --crit-soft:#402825; --muted-soft:#2c2f28;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 18px rgba(0,0,0,.35);
+  }
+}
+*{box-sizing:border-box;}
+body{margin:0; background:var(--paper); color:var(--ink); font-family:'Heebo',system-ui,-apple-system,sans-serif; padding:14px clamp(16px,3vw,40px) 40px;}
+h1{font-family:'Frank Ruhl Libre',serif; font-size:clamp(20px,2.4vw,26px); font-weight:700; margin:0 0 4px;}
+.subtitle{color:var(--ink-soft); font-size:13.5px; margin:0;}
+.topbar{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:16px;}
+button,select{font-family:inherit; font-size:13.5px; font-weight:600; cursor:pointer; border-radius:8px; border:1px solid var(--line);
+  background:var(--paper-raised); color:var(--ink); padding:9px 14px;}
+select{font-weight:500; padding:5px 8px;}
+button:hover{border-color:var(--accent);}
+button.primary{background:var(--accent); border-color:var(--accent); color:#fff;}
+button.primary:hover{background:var(--accent-ink);}
+button.danger{color:var(--crit); border-color:var(--crit);}
+button.danger.confirm{background:var(--crit); color:#fff;}
+button.small{padding:5px 10px; font-size:12.5px;}
+button:disabled{opacity:.5; cursor:default;}
+.tabs{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; border-bottom:1px solid var(--line); padding-bottom:10px;}
+.tab{border:1px solid transparent; background:transparent; color:var(--ink-soft); border-radius:999px; padding:7px 14px;}
+.tab.active{background:var(--accent); color:#fff;}
+.sharebox{display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:var(--paper-raised); border:1px solid var(--line);
+  border-radius:12px; box-shadow:var(--shadow); padding:14px 16px; margin-bottom:14px;}
+.sharebox .lbl{font-weight:600; font-size:13.5px;}
+.sharebox .txt{color:var(--ink-soft); font-size:12.5px; line-height:1.5; flex:1 1 260px; min-width:0;}
+.linkinput{font-family:monospace; font-size:12.5px; direction:ltr; text-align:left; border:1px solid var(--line); border-radius:6px; padding:6px 8px;
+  background:var(--paper); color:var(--ink-soft); width:300px; max-width:100%;}
+.tablewrap{overflow:auto; border:1px solid var(--line); border-radius:12px; background:var(--paper-raised); box-shadow:var(--shadow);}
+table{border-collapse:collapse; width:100%; font-size:13.5px; min-width:900px;}
+thead th{text-align:right; font-weight:600; color:var(--ink-soft); font-size:12px; padding:11px 12px; border-bottom:1px solid var(--line); white-space:nowrap;}
+tbody td{padding:9px 12px; border-bottom:1px solid var(--line); vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:var(--muted-soft);}
+.cell{outline:none; border-radius:5px; padding:4px 6px; display:inline-block; min-width:70px;}
+.cell:hover{background:var(--muted-soft);}
+.cell:focus{background:var(--accent-soft); box-shadow:0 0 0 1px var(--accent) inset;}
+.cell.name{font-weight:600; min-width:110px;}
+.cell.notes{min-width:140px; max-width:260px; white-space:normal;}
+.codebox{display:flex; align-items:center; gap:8px;}
+.codeinput{font-family:monospace; font-size:13.5px; font-weight:600; width:132px; direction:ltr; text-align:center; border:1px solid var(--line);
+  border-radius:6px; padding:5px 7px; background:var(--paper); color:var(--ink);}
+.togglewrap{display:flex; justify-content:center;}
+.togglewrap input{width:19px; height:19px; accent-color:var(--accent); cursor:pointer;}
+.inactive td{opacity:.5;}
+.datecell{color:var(--ink-soft); font-size:12px; white-space:nowrap;}
+.hint{color:var(--ink-soft); font-size:12px;}
+.empty{padding:36px; text-align:center; color:var(--ink-soft);}
+.status{min-height:20px; font-size:13px; color:var(--ink-soft); margin:10px 0;}
+.status.err{color:var(--crit); font-weight:600;}
+.status.ok{color:var(--ok);}
+.footnote{color:var(--ink-soft); font-size:12px; margin-top:14px; line-height:1.7;}
+.gatewrap{display:flex; align-items:center; justify-content:center; min-height:75vh;}
+.gatebox{background:var(--paper-raised); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:32px 28px; max-width:400px; text-align:center;}
+.gatebox p{color:var(--ink-soft); font-size:13.5px; line-height:1.6;}
+</style>
+</head>
+<body>
+
+<div id="gate" class="gatewrap">
+  <div class="gatebox">
+    <h1>ניהול קודים</h1>
+    <p>דף פרטי לניהול קודי הגישה ללוח המעקב ולדו"ח העובדים.<br>הכניסה עם חשבון הגוגל שבו נמצא גיליון הקודים.</p>
+    <button class="primary" id="btnLogin" disabled>כניסה עם חשבון גוגל</button>
+    <div class="status" id="gateStatus">טוען…</div>
+  </div>
+</div>
+
+<div id="app" hidden>
+  <div class="topbar">
+    <div>
+      <h1>ניהול קודים</h1>
+      <p class="subtitle">שלחן ערוך — קודי גישה ללוח המעקב ולדו"ח העובדים</p>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap">
+      <button class="primary" id="btnCreate">＋ צור קוד חדש</button>
+      <button id="btnReload" title="טעינה מחדש מהגיליון">↻ רענן</button>
+      <button id="btnSheet" title="פתיחת גיליון הקודים">פתח את הגיליון</button>
+    </div>
+  </div>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="viewers">לוח המעקב (בוסים וצופים)</button>
+    <button class="tab" data-tab="workers">דו"ח העובדים (עורכים ומבקרים)</button>
+  </nav>
+
+  <div class="sharebox">
+    <span class="lbl">קישור לשליחה (זהה לכולם):</span>
+    <input type="text" class="linkinput" id="shareLink" readonly onclick="this.select()">
+    <button class="small" id="btnCopyLink">העתק קישור</button>
+    <span class="txt">שולחים לכל אחד את הקישור, ובנפרד את הקוד האישי שלו. בכניסה הראשונה מזינים את הקוד, ובפעמים הבאות מאותו מחשב הכניסה אוטומטית.</span>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <div class="tablewrap"><table>
+    <thead id="thead"></thead>
+    <tbody id="tbody"><tr><td class="empty">טוען…</td></tr></tbody>
+  </table></div>
+
+  <p class="footnote">
+    שינוי שם, הערה, סוג או קבוצה נשמר כשיוצאים מהתא. ביטול הסימון "פעיל" משבית את הקוד; מחיקה מוחקת את השורה לצמיתות (לחיצה כפולה לאישור).<br>
+    <b>מתי השינוי נכנס לאתר:</b> בעדכון הלוחות הבא — בסוף כל סבב, או מיד כשמבקשים מקלוד "תעדכן את הלוחות". עד אז הקוד החדש עוד לא עובד, וקוד שבוטל עוד עובד.<br>
+    בדו"ח העובדים, "השם בטבלה" חייב להיות בדיוק כמו בטבלת המעקב. אם יש לעובד כמה כתיבים, מפרידים בפסיק.
+  </p>
+</div>
+
+<script>
+const CLIENT_ID = "827084615617-ju8uehuut2e3u2urienhpmdrqvs4fneo.apps.googleusercontent.com";
+const SHEET_ID = "1-GssuyrJJfG86eQ1WxMdyrmnFtt9XXDEvGeDa1THPmA";
+const SCOPE = "https://www.googleapis.com/auth/spreadsheets";
+const API = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}`;
+const LINKS = {viewers: "https://app.bookediting.org/board/", workers: "https://app.bookediting.org/report/"};
+const ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+// עמודות בגיליון
+const TABS = {
+  viewers: {sheet: "צופים", cols: ["name","code","active","kind","notes","created"], width: "F"},
+  workers: {sheet: "עובדים", cols: ["name","aliases","code","active","group","notes","created"], width: "G"},
+};
+const KINDS = ["צופה","מנהל"];
+const GROUPS = ["העובדים שלי","עורך מכון","מנהל"];
+
+let token = null, tokenClient = null, tab = "viewers", ROWS = [], sheetIds = {};
+
+function esc(s){ return (s==null?"":String(s)).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function setStatus(msg, cls){ const el=document.getElementById('status'); el.textContent=msg||''; el.className='status '+(cls||''); }
+function genCode(){ const b=crypto.getRandomValues(new Uint32Array(12)); return [...b].map(x=>ALPHABET[x%ALPHABET.length]).join(''); }
+function today(){ const d=new Date(), p=n=>String(n).padStart(2,'0'); return `${p(d.getDate())}/${p(d.getMonth()+1)}/${String(d.getFullYear()).slice(-2)}`; }
+
+async function api(path, opts){
+  opts = opts || {};
+  const r = await fetch(API + path, {method: opts.method||'GET', headers: {Authorization: 'Bearer '+token, 'Content-Type':'application/json'},
+    body: opts.body ? JSON.stringify(opts.body) : undefined});
+  if(r.status === 401){ token = null; throw new Error('החיבור לגוגל פג. לחץ "רענן" כדי להתחבר שוב.'); }
+  if(!r.ok){ throw new Error('שגיאה מגוגל ('+r.status+'). נסה "רענן".'); }
+  return r.json();
+}
+const rng = (t, a1) => encodeURIComponent(`'${TABS[t].sheet}'!${a1}`);
+
+async function load(){
+  setStatus('טוען מהגיליון…');
+  const meta = await api('?fields=sheets(properties(sheetId,title))');
+  meta.sheets.forEach(s=>sheetIds[s.properties.title]=s.properties.sheetId);
+  const t = TABS[tab];
+  const res = await api('/values/' + rng(tab, 'A2:'+t.width));
+  ROWS = (res.values||[]).map((v,i)=>{ const o={row:i+2}; t.cols.forEach((c,j)=>o[c]=(v[j]||'').trim()); return o; })
+    .filter(o=>o.code || o.name);
+  render(); setStatus('');
+}
+
+function header(){
+  return tab==='viewers'
+    ? '<tr><th style="width:54px">פעיל</th><th>שם</th><th>סוג</th><th>קוד אישי</th><th>הערות</th><th>נוצר</th><th></th></tr>'
+    : '<tr><th style="width:54px">פעיל</th><th>שם</th><th>השם בטבלה</th><th>קבוצה</th><th>קוד אישי</th><th>הערות</th><th>נוצר</th><th></th></tr>';
+}
+function selectHtml(field, options, val, row){
+  return `<select data-row="${row}" data-field="${field}">${options.map(o=>`<option ${o===val?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
+}
+function render(){
+  document.getElementById('thead').innerHTML = header();
+  document.getElementById('shareLink').value = LINKS[tab];
+  const tb = document.getElementById('tbody');
+  if(!ROWS.length){ tb.innerHTML = '<tr><td colspan="8" class="empty">אין עדיין קודים. לחצו "צור קוד חדש".</td></tr>'; return; }
+  tb.innerHTML = ROWS.map(r=>{
+    const active = r.active === 'כן';
+    const cells = [
+      `<td><div class="togglewrap"><input type="checkbox" data-toggle="${r.row}" ${active?'checked':''} title="פעיל / מבוטל"></div></td>`,
+      `<td><span class="cell name" contenteditable="true" data-row="${r.row}" data-field="name">${esc(r.name)}</span></td>`,
+    ];
+    if(tab==='workers'){
+      cells.push(`<td><span class="cell" contenteditable="true" data-row="${r.row}" data-field="aliases" title="בדיוק כמו בטבלת המעקב">${esc(r.aliases)}</span></td>`);
+      cells.push(`<td>${selectHtml('group', GROUPS, r.group, r.row)}</td>`);
+    } else {
+      cells.push(`<td>${selectHtml('kind', KINDS, r.kind||'צופה', r.row)}</td>`);
+    }
+    cells.push(`<td><div class="codebox"><input class="codeinput" readonly value="${esc(r.code)}" onclick="this.select()"><button class="small copybtn" data-value="${esc(r.code)}">העתק קוד</button></div></td>`);
+    cells.push(`<td><span class="cell notes" contenteditable="true" data-row="${r.row}" data-field="notes">${esc(r.notes)}</span></td>`);
+    cells.push(`<td class="datecell">${esc(r.created)}</td>`);
+    cells.push(`<td><button class="small danger rowdel" data-del="${r.row}">מחק</button></td>`);
+    return `<tr class="${active?'':'inactive'}">${cells.join('')}</tr>`;
+  }).join('');
+  tb.querySelectorAll('.cell').forEach(el=>{
+    el.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); el.blur(); } });
+    el.addEventListener('blur', ()=>saveField(+el.dataset.row, el.dataset.field, el.textContent.trim()));
+  });
+  tb.querySelectorAll('select').forEach(el=>el.addEventListener('change', ()=>saveField(+el.dataset.row, el.dataset.field, el.value)));
+  tb.querySelectorAll('[data-toggle]').forEach(cb=>cb.addEventListener('change', ()=>saveField(+cb.dataset.toggle, 'active', cb.checked?'כן':'לא')));
+  tb.querySelectorAll('.copybtn').forEach(b=>b.addEventListener('click', ()=>copy(b, b.dataset.value)));
+  tb.querySelectorAll('.rowdel').forEach(b=>b.addEventListener('click', ()=>{
+    if(b.classList.contains('confirm')) return delRow(+b.dataset.del);
+    b.classList.add('confirm'); b.textContent='למחוק לצמיתות?';
+    setTimeout(()=>{ b.classList.remove('confirm'); b.textContent='מחק'; }, 2500);
+  }));
+}
+
+async function saveField(row, field, value){
+  const r = ROWS.find(x=>x.row===row); if(!r || r[field]===value) return;
+  const col = String.fromCharCode(65 + TABS[tab].cols.indexOf(field));
+  try{
+    setStatus('שומר…');
+    await api('/values/' + rng(tab, col+row) + '?valueInputOption=RAW', {method:'PUT', body:{values:[[value]]}});
+    r[field] = value; setStatus('נשמר ✓', 'ok'); if(field==='active') render();
+  }catch(e){ setStatus(e.message, 'err'); }
+}
+
+async function createCode(){
+  const t = TABS[tab]; const o = {name:'', aliases:'', code:genCode(), active:'כן', kind:'צופה', group:'העובדים שלי', notes:'', created:today()};
+  try{
+    setStatus('יוצר קוד…');
+    await api('/values/' + rng(tab, 'A:'+t.width) + ':append?valueInputOption=RAW&insertDataOption=INSERT_ROWS',
+      {method:'POST', body:{values:[t.cols.map(c=>o[c])]}});
+    await load(); setStatus('נוצר קוד חדש. מלא את השם בשורה שלו.', 'ok');
+  }catch(e){ setStatus(e.message, 'err'); }
+}
+
+async function delRow(row){
+  try{
+    setStatus('מוחק…');
+    await api(':batchUpdate', {method:'POST', body:{requests:[{deleteDimension:{range:{sheetId:sheetIds[TABS[tab].sheet], dimension:'ROWS', startIndex:row-1, endIndex:row}}}]}});
+    await load(); setStatus('נמחק.', 'ok');
+  }catch(e){ setStatus(e.message, 'err'); }
+}
+
+async function copy(btn, value){
+  const orig = btn.textContent;
+  try{ await navigator.clipboard.writeText(value); btn.textContent='הועתק ✓'; }
+  catch(e){ const inp = btn.parentElement.querySelector('input'); if(inp){ inp.focus(); inp.select(); } btn.textContent='סמן והעתק ידנית'; }
+  setTimeout(()=>btn.textContent=orig, 2000);
+}
+
+function login(){ tokenClient.requestAccessToken({prompt: token ? '' : 'select_account'}); }
+
+function onToken(resp){
+  if(resp.error){ document.getElementById('gateStatus').textContent = 'הכניסה בוטלה או נכשלה.'; return; }
+  token = resp.access_token;
+  document.getElementById('gate').hidden = true;
+  document.getElementById('app').hidden = false;
+  load().catch(e=>setStatus(e.message.includes('403') ? 'לחשבון הזה אין גישה לגיליון הקודים.' : e.message, 'err'));
+}
+
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active', x===b));
+  tab = b.dataset.tab; ROWS=[]; load().catch(e=>setStatus(e.message,'err'));
+});
+document.getElementById('btnCreate').onclick = createCode;
+document.getElementById('btnReload').onclick = ()=> token ? load().catch(e=>{ setStatus(e.message,'err'); if(!token) login(); }) : login();
+document.getElementById('btnSheet').onclick = ()=> window.open(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`, '_blank', 'noopener');
+document.getElementById('btnCopyLink').onclick = function(){ copy(this, LINKS[tab]); };
+document.getElementById('btnLogin').onclick = login;
+
+(function waitGis(){
+  if(window.google && google.accounts && google.accounts.oauth2){
+    tokenClient = google.accounts.oauth2.initTokenClient({client_id: CLIENT_ID, scope: SCOPE, callback: onToken});
+    document.getElementById('btnLogin').disabled = false;
+    document.getElementById('gateStatus').textContent = '';
+  } else setTimeout(waitGis, 200);
+})();
+</script>
+</body>
+</html>
