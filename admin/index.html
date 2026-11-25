@@ -123,7 +123,7 @@ tbody tr:hover td{background:var(--muted-soft);}
 <script>
 const CLIENT_ID = "827084615617-ju8uehuut2e3u2urienhpmdrqvs4fneo.apps.googleusercontent.com";
 const SHEET_ID = "1-GssuyrJJfG86eQ1WxMdyrmnFtt9XXDEvGeDa1THPmA";
-const SCOPE = "https://www.googleapis.com/auth/spreadsheets";
+const SCOPE = "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email";
 const API = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}`;
 const LINKS = {viewers: "https://app.bookediting.org/board/", workers: "https://app.bookediting.org/report/"};
 const ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
@@ -251,7 +251,18 @@ function login(mode){
   const p = new URLSearchParams({client_id: CLIENT_ID, redirect_uri: REDIRECT, response_type: 'token', scope: SCOPE,
     include_granted_scopes: 'true', state: mode});
   if(mode === 'silent') p.set('prompt', 'none');
+  const hint = getHint(); if(hint) p.set('login_hint', hint);  // החשבון שנבחר בפעם הקודמת: גוגל בוחר אותו לבד
   location.replace('https://accounts.google.com/o/oauth2/v2/auth?' + p.toString());
+}
+// כתובת החשבון נשמרת רק בדפדפן הזה (לא באתר), כדי שבפעם הבאה לא תופיע בחירת חשבון.
+function getHint(){ try{ return localStorage.getItem('codesAdminHint') || ''; }catch(e){ return ''; } }
+async function rememberAccount(){
+  try{
+    const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {headers:{Authorization:'Bearer ' + token}});
+    if(!r.ok) return;
+    const u = await r.json();
+    if(u.email) localStorage.setItem('codesAdminHint', u.email);
+  }catch(e){}
 }
 function saveToken(t, expiresIn){
   token = t;
@@ -280,6 +291,7 @@ document.getElementById('btnLogin').onclick = ()=>login('interactive');
   if(h.get('access_token')){
     saveToken(h.get('access_token'), +h.get('expires_in'));
     history.replaceState(null, '', location.pathname);  // מנקה את הכתובת
+    rememberAccount();
     return showApp();
   }
   if(h.get('error')){
